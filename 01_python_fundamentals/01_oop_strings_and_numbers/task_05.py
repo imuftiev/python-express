@@ -2,76 +2,65 @@
     Задание 5. Парсер логов с анализом событий
     Написать собственный парсер логов, который анализирует события, группирует их и формирует статистику.
 """
+import json
 
 
-def analyze_logs(logs: dict) -> dict:
+def analyze_logs(logs: list[dict]) -> dict:
     data = {}
     errors = {}
     events_by_users = {}
+    top_error_user = {}
     unique_users = set()
-    info_count, error_count, warning_count, invalid_count = 0, 0, 0, 0
+    info_count, error_count, warning_count = 0, 0, 0
     events_by_minutes = []
 
     for row in logs:
-        log = logs.get(row)
-        if log == "Invalid":
-            invalid_count += 1
-
-        else:
-            events_by_minutes.append(log[0])
-            for el in log:
-
-                if el.startswith("user_"):
-                    unique_users.add(el)
-                    events_by_users[el] = events_by_users.get(el, 0) + 1
-            if log.count("INFO") >= 1:
+        unique_users.add(row['user'])
+        match row['level']:
+            case 'INFO':
                 info_count += 1
-
-            elif log.count("ERROR") >= 1:
-                error_count += 1
-                errors[logs[row][3]] = errors.setdefault(logs[row][3], 0) + 1
-            elif log.count("WARNING") >= 1:
+            case 'WARNING':
                 warning_count += 1
-
-    data["levels"] = {
-        "INFO": info_count,
-        "ERROR": error_count,
-        "WARNING": warning_count
+            case 'ERROR':
+                error_count += 1
+                top_error_user[row['user']] = top_error_user.setdefault(row['user'], 0) + 1
+                errors[row['message']] = errors.setdefault(row['message'], 0) + 1
+        events_by_users[row['user']] = events_by_users.setdefault(row['user'], 0) + 1
+    top_error_user = max(top_error_user.items(), key=lambda x: x[1])
+    most_active_person = max(events_by_users.items(), key=lambda x: x[1])
+    data['total_events'] = len(logs)
+    data['levels'] = {
+        'INFO': info_count,
+        'ERROR': error_count,
+        'WARNING': warning_count
     }
-    data["total_events"] = len(logs) - invalid_count
+    data['unique_users'] = len(unique_users)
+    data['events_by_user'] = events_by_users
+    data['most_active_user'] = most_active_person
+    data['errors'] = errors
+    data['top_error_user'] = top_error_user
     events_by_minutes.sort()
-    data["events_by_minute"] = events_by_minutes
-    data["unique_users"] = len(unique_users)
-    data["events_by_user"] = events_by_users
-    data["errors"] = errors
-    data["invalid_lines"] = invalid_count
-    data["parsed_logs"] = logs
-    max_value = 0
-    most_active_users = {}
-    for user, value in events_by_users.items():
-        max_value = max(value, max_value)
-    print(max_value)
+    data['events_by_minute'] = events_by_minutes
+    data['parsed_logs'] = logs
 
     return data
 
 
-def parse_log(log_path: str) -> dict:
-    logs_data = {}
-    fields = ['timestamp', 'level', 'user_id', 'message']
-    with open(log_path, "r", encoding="utf-8") as file:
-        row = file.read()
-        rows = row.split("\n", )
-        print(rows)
-        for i, r in enumerate(rows):
-            logs = r.split("|")
-            if len(logs) == 4:
-                result = [x.strip() for x in logs]
-                logs_data[i] = result
+def parse_log(log_path: str) -> list[dict]:
+    logs_data = []
+    invalid_logs = {}
+    fields = ['timestamp', 'level', 'user', 'message']
+    with open(log_path, 'r', encoding='utf-8') as file:
+        rows = file.read().split("\n")
+        for c, r in enumerate(rows):
+            logs = r.split('|')
+            logs = [x.strip() for x in logs]
+            if len(logs) == 4 and all(logs):
+                logs_data.append(dict(zip(fields, logs)))
             else:
-                logs_data[i] = "Invalid"
-    print(logs_data)
+                invalid_logs.setdefault(c + 1, r)
+
     return logs_data
 
 
-print(analyze_logs(parse_log(
-    "C:\\Users\\iwast\\PycharmProjects\\python-express\\01_python_fundamentals\\01_oop_strings_and_numbers\\task_5_logs\\logs.txt")))
+print(json.dumps(analyze_logs(parse_log('task_5_logs/logs.txt')), indent=3))

@@ -1,0 +1,101 @@
+{
+    "total_events": 10,
+
+    "levels": {
+        "INFO": 4,
+        "ERROR": 4,
+        "WARNING": 2
+    },
+
+    "unique_users": 3,
+
+    "events_by_user": {
+        "user_123": 4,
+        "user_456": 4,
+        "user_789": 2
+    },
+
+    "most_active_user": ["user_123", 4], X
+
+    "errors": {
+        "Database connection failed": 3,
+        "Authentication failed": 1
+    },
+
+    "top_error_user": ["user_456", 3], X
+
+    "most_common_error": ["Database connection failed", 3], X
+
+    "events_by_minute": {
+        "2026-10-27 10:15": 3,
+        "2026-10-27 10:16": 2,
+        "2026-10-27 10:17": 2,
+        "2026-10-27 10:18": 2,
+        "2026-10-27 10:19": 1
+    },
+
+    "busiest_minute": ["2026-10-27 10:15", 3],
+
+    "parsed_logs": [
+        {
+            "timestamp": "2026-10-27 10:15:01",
+            "level": "INFO",
+            "user_id": "user_123",
+            "message": "Login successful"
+        },
+        {
+            "timestamp": "2026-10-27 10:15:03",
+            "level": "ERROR",
+            "user_id": "user_456",
+            "message": "Database connection failed"
+        },
+        {
+            "timestamp": "2026-10-27 10:15:05",
+            "level": "WARNING",
+            "user_id": "user_123",
+            "message": "Slow query detected"
+        },
+        {
+            "timestamp": "2026-10-27 10:16:01",
+            "level": "INFO",
+            "user_id": "user_789",
+            "message": "Login successful"
+        },
+        {
+            "timestamp": "2026-10-27 10:16:15",
+            "level": "ERROR",
+            "user_id": "user_456",
+            "message": "Database connection failed"
+        },
+        {
+            "timestamp": "2026-10-27 10:17:01",
+            "level": "ERROR",
+            "user_id": "user_123",
+            "message": "Authentication failed"
+        },
+        {
+            "timestamp": "2026-10-27 10:17:30",
+            "level": "INFO",
+            "user_id": "user_456",
+            "message": "Logout successful"
+        },
+        {
+            "timestamp": "2026-10-27 10:18:01",
+            "level": "WARNING",
+            "user_id": "user_789",
+            "message": "Slow query detected"
+        },
+        {
+            "timestamp": "2026-10-27 10:18:20",
+            "level": "ERROR",
+            "user_id": "user_456",
+            "message": "Database connection failed"
+        },
+        {
+            "timestamp": "2026-10-27 10:19:01",
+            "level": "INFO",
+            "user_id": "user_123",
+            "message": "Login successful"
+        }
+    ]
+}
