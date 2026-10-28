@@ -9,31 +9,43 @@ def analyze_logs(logs: dict) -> dict:
     errors = {}
     events_by_users = {}
     unique_users = set()
-    data["total_events"] = len(logs)
-    info_count, error_count, warning_count = 0, 0, 0
+    info_count, error_count, warning_count, invalid_count = 0, 0, 0, 0
+    events_by_minutes = []
 
     for row in logs:
         log = logs.get(row)
-        for el in log:
-            if el.startswith("user_"):
-                unique_users.add(el)
-                events_by_users[el] = events_by_users.get(el, 0) + 1
-        if log.count("INFO") >= 1:
-            info_count += 1
+        if log == "Invalid":
+            invalid_count += 1
 
-        elif log.count("ERROR") >= 1:
-            error_count += 1
-            errors[logs[row][3]] = errors.setdefault(logs[row][3], 0) + 1
-        elif log.count("WARNING") >= 1:
-            warning_count += 1
+        else:
+            events_by_minutes.append(log[0])
+            for el in log:
+
+                if el.startswith("user_"):
+                    unique_users.add(el)
+                    events_by_users[el] = events_by_users.get(el, 0) + 1
+            if log.count("INFO") >= 1:
+                info_count += 1
+
+            elif log.count("ERROR") >= 1:
+                error_count += 1
+                errors[logs[row][3]] = errors.setdefault(logs[row][3], 0) + 1
+            elif log.count("WARNING") >= 1:
+                warning_count += 1
+
     data["levels"] = {
         "INFO": info_count,
         "ERROR": error_count,
         "WARNING": warning_count
     }
+    data["total_events"] = len(logs) - invalid_count
+    events_by_minutes.sort()
+    data["events_by_minute"] = events_by_minutes
     data["unique_users"] = len(unique_users)
-    data["events_by_users"] = events_by_users
+    data["events_by_user"] = events_by_users
     data["errors"] = errors
+    data["invalid_lines"] = invalid_count
+    data["parsed_logs"] = logs
     max_value = 0
     most_active_users = {}
     for user, value in events_by_users.items():
@@ -45,16 +57,18 @@ def analyze_logs(logs: dict) -> dict:
 
 def parse_log(log_path: str) -> dict:
     logs_data = {}
-    with open(log_path, "r+") as file:
+    fields = ['timestamp', 'level', 'user_id', 'message']
+    with open(log_path, "r", encoding="utf-8") as file:
         row = file.read()
         rows = row.split("\n", )
+        print(rows)
         for i, r in enumerate(rows):
             logs = r.split("|")
-            if len(logs) < 4:
-                logs_data[i] = "Invalid"
-            else:
+            if len(logs) == 4:
                 result = [x.strip() for x in logs]
                 logs_data[i] = result
+            else:
+                logs_data[i] = "Invalid"
     print(logs_data)
     return logs_data
 
