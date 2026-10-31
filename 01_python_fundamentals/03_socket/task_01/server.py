@@ -1,3 +1,4 @@
+import json
 import threading
 import socket
 from db import get_connection
@@ -15,17 +16,29 @@ def handle_request(client: socket.socket, address: tuple) -> None:
         data = client.recv(4096).decode('utf-8')
         if not data:
             break
-        user = handle_client(str(data))
-        client.send(('Hello, ' + str(user)).encode('utf-8'))
+        try:
+            response = handle_client(data)
+        except Exception as e:
+            print(f"Database error: {e}")
+
+            response = {
+                "status": 500,
+                "body": str(e)
+            }
+
+        client.sendall(json.dumps(response, ensure_ascii=False).encode("utf-8"))
 
 
-def handle_client(name: str) -> User:
+def handle_client(name: str) -> dict | Exception:
+    response_status = {}
     user = User(name)
     with get_connection() as conn:
         with conn.cursor() as cursor:
-            cursor.execute('insert into users (name) values (%s)', (name,))
+            cursor.execute('insert into users (name) values (%s)', (user.name,))
             conn.commit()
-    return user
+    response_status["status"] = response_status.get("status", 200)
+    response_status["body"] = response_status.get("body", user.name)
+    return response_status
 
 
 def main() -> None:
